@@ -217,6 +217,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
+<<<<<<< HEAD
 .env
 .env.*
 
@@ -225,9 +226,30 @@ __pycache__/
 
 .DS_Store
 
+=======
+# env
+.env
+.env.*
+
+# python
+__pycache__/
+*.pyc
+
+# mac
+.DS_Store
+
+# data
+>>>>>>> f79b1ccfd7da94fa62d69a994c2045b6e99aed9d
 data/
 output/
 logs/
 
+<<<<<<< HEAD
 .ipynb_checkpoints/
+=======
+# notebooks
+.ipynb_checkpoints/
+
+# vscode
+>>>>>>> f79b1ccfd7da94fa62d69a994c2045b6e99aed9d
 .vscode/

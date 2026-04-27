@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🎌 AniData Lab — Observatoire Anime/Manga
 
 > Pipeline de données complet : Data Refinement → Elasticsearch + Grafana → Airflow
@@ -264,3 +265,6 @@ docker compose up -d
 - [Documentation Grafana](https://grafana.com/docs/grafana/latest/)
 - [Documentation Airflow](https://airflow.apache.org/docs/apache-airflow/stable/)
 - [Pandas Documentation](https://pandas.pydata.org/docs/)
+=======
+# anidata_devops
+>>>>>>> f79b1ccfd7da94fa62d69a994c2045b6e99aed9d
