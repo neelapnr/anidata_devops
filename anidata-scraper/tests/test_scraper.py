@@ -5,6 +5,7 @@ réponses réseau. Deux approches combinées :
 1. Tests de parsing pur via des fragments HTML fixes (fixtures.py)
 2. Tests d'intégration via monkeypatching de la méthode _fetch
 """
+
 from __future__ import annotations
 
 import json
@@ -22,6 +23,7 @@ from anidata_scraper.scraper import (
 from tests import fixtures
 
 # ============== PARSING UNITAIRE ==============
+
 
 @pytest.fixture
 def scraper() -> AniDexScraper:
@@ -91,6 +93,7 @@ class TestParseCatalogCard:
 
 # ============== SCRAPING AVEC MOCK HTTP ==============
 
+
 class FakeResponse:
     """Fake requests.Response qui renvoie du HTML fixé."""
 
@@ -102,6 +105,7 @@ class FakeResponse:
     def raise_for_status(self):
         if self.status_code >= 400:
             import requests
+
             raise requests.HTTPError(f"{self.status_code} Error", response=self)
 
 
@@ -140,9 +144,13 @@ class TestEnrichFromDetail:
     def test_enrich_adds_synopsis_and_specs(self, scraper, mock_site):
         mock_site["/anime/attack-on-titan.html"] = fixtures.DETAIL_PAGE
         anime = Anime(
-            id=1, title_en="Attack on Titan", title_jp="進撃の巨人",
+            id=1,
+            title_en="Attack on Titan",
+            title_jp="進撃の巨人",
             detail_url="/anime/attack-on-titan.html",
-            year=2013, studio="Wit Studio", score=9.0,
+            year=2013,
+            studio="Wit Studio",
+            score=9.0,
             genres=["Action"],
         )
         enriched = scraper.enrich_from_detail(anime)
@@ -157,9 +165,14 @@ class TestEnrichFromDetail:
         """La structure <dl> doit aussi fonctionner."""
         mock_site["/anime/steins-gate.html"] = fixtures.DETAIL_PAGE_VARIANT
         anime = Anime(
-            id=13, title_en="Steins;Gate", title_jp="シュタインズ・ゲート",
+            id=13,
+            title_en="Steins;Gate",
+            title_jp="シュタインズ・ゲート",
             detail_url="/anime/steins-gate.html",
-            year=2011, studio="White Fox", score=9.1, genres=[],
+            year=2011,
+            studio="White Fox",
+            score=9.1,
+            genres=[],
         )
         enriched = scraper.enrich_from_detail(anime)
 
@@ -168,13 +181,21 @@ class TestEnrichFromDetail:
 
     def test_enrich_with_missing_page_does_not_crash(self, scraper, monkeypatch):
         """Une erreur sur la page détail ne doit pas casser le pipeline."""
+
         def broken_fetch(path):
             raise RuntimeError("Network down")
+
         monkeypatch.setattr(scraper, "_fetch", broken_fetch)
 
         anime = Anime(
-            id=1, title_en="X", title_jp=None, detail_url="/anime/x.html",
-            year=2020, studio="Y", score=8.0, genres=[],
+            id=1,
+            title_en="X",
+            title_jp=None,
+            detail_url="/anime/x.html",
+            year=2020,
+            studio="Y",
+            score=8.0,
+            genres=[],
         )
         result = scraper.enrich_from_detail(anime)
         # L'anime est renvoyé tel quel, sans enrichissement
@@ -195,10 +216,12 @@ class TestScrapeNews:
 
 # ============== RETRY HTTP ==============
 
+
 class TestRetryLogic:
     def test_retry_on_timeout_then_success(self, scraper, monkeypatch):
         """Une Timeout doit déclencher un retry qui peut réussir."""
         import requests
+
         call_count = {"n": 0}
 
         def flaky_get(url, timeout):
@@ -226,12 +249,14 @@ class TestRetryLogic:
         monkeypatch.setattr("time.sleep", lambda s: None)
 
         import requests
+
         with pytest.raises(requests.HTTPError):
             scraper._fetch("/missing")
         assert call_count["n"] == 1  # pas de retry
 
 
 # ============== INTÉGRATION scrape_to_file ==============
+
 
 class TestScrapeToFile:
     def test_writes_json_with_expected_structure(self, tmp_path, monkeypatch):
@@ -240,14 +265,16 @@ class TestScrapeToFile:
         fake_data = {
             "scraped_at": "2026-04-27T12:00:00+00:00",
             "source": "http://mock-site",
-            "stats": {"animes_count": 1, "news_count": 0,
-                      "missing_scores": 0, "missing_studios": 0},
+            "stats": {
+                "animes_count": 1,
+                "news_count": 0,
+                "missing_scores": 0,
+                "missing_studios": 0,
+            },
             "animes": [{"id": 1, "title_en": "Test"}],
             "news": [],
         }
-        monkeypatch.setattr(
-            AniDexScraper, "scrape_all", lambda self, enrich=True: fake_data
-        )
+        monkeypatch.setattr(AniDexScraper, "scrape_all", lambda self, enrich=True: fake_data)
 
         filepath = scrape_to_file(output_dir=tmp_path, base_url="http://mock-site")
 
