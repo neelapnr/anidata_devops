@@ -193,3 +193,7 @@ with DAG(
     t_verify = PythonOperator(task_id="verify", python_callable=verify)
 
     t_resolve >> t_transform >> t_load >> t_verify
+
+# Demo CI/CD
+
+# Demo CI/CD - run 2
