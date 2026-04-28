@@ -1,4 +1,5 @@
 """AniData Lab scraper package."""
+
 from anidata_scraper.scraper import (
     AniDexScraper,
     Anime,
