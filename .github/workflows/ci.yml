@@ -1,4 +1,11 @@
-name: CI
+name: CI/CD
+
+# ===========================================================================
+# Workflow CI/CD — AniData Lab Semaine 2
+# ---------------------------------------------------------------------------
+# Job 1 : Lint + Tests (séance 2)
+# Job 2 : Build + Push image Docker sur GHCR (séance 3)
+# ===========================================================================
 
 on:
   push:
@@ -6,7 +13,15 @@ on:
   pull_request:
     branches: [main]
 
+# Permissions nécessaires pour publier sur GHCR
+permissions:
+  contents: read
+  packages: write
+
 jobs:
+  # -------------------------------------------------------------------------
+  # JOB 1 — Lint & Tests (existait déjà, on ne change rien)
+  # -------------------------------------------------------------------------
   lint-and-test:
     name: Lint & Test
     runs-on: ubuntu-latest
@@ -38,3 +53,72 @@ jobs:
 
       - name: Run tests with coverage
         run: pytest --cov=anidata_scraper --cov-report=term-missing
+
+  # -------------------------------------------------------------------------
+  # JOB 2 — Build & Push de l'image Docker sur GHCR
+  # -------------------------------------------------------------------------
+  # Ne tourne QUE si le job lint-and-test passe (needs:).
+  # Sur les Pull Requests : on builde l'image (pour valider que le Dockerfile
+  # marche) mais on ne la pousse PAS sur GHCR.
+  # Sur push vers main : on builde ET on pousse avec les bons tags.
+  # -------------------------------------------------------------------------
+  build-and-push:
+    name: Build & Push Docker
+    needs: lint-and-test
+    runs-on: ubuntu-latest
+
+    env:
+      REGISTRY: ghcr.io
+      IMAGE_NAME: ${{ github.repository }}-airflow
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Buildx active les fonctionnalités avancées de build (cache, etc.)
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Login sur GHCR avec le GITHUB_TOKEN automatique (pas de secret manuel
+      # à configurer). On ne se connecte que si on va pousser (= pas en PR).
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # Génère automatiquement les tags : latest, sha-XXXXXXX, et version
+      # sémantique si on push un tag git de la forme vX.Y.Z
+      - name: Extract metadata (tags & labels)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            type=sha,prefix=sha-,format=short
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Résumé
+        if: github.event_name != 'pull_request'
+        run: |
+          echo "## ✅ Image publiée sur GHCR" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Tags :" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
