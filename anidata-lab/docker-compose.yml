@@ -106,7 +106,7 @@ services:
   # AIRFLOW - Init (exécuté une seule fois)
   # ==========================================
   airflow-init:
-    image: apache/airflow:2.8.1-python3.11
+    image: ${AIRFLOW_IMAGE:-apache/airflow:2.8.1-python3.11}
     container_name: anidata-airflow-init
     entrypoint: /bin/bash
     command:
@@ -146,7 +146,7 @@ services:
   # AIRFLOW - Webserver
   # ==========================================
   airflow-webserver:
-    image: apache/airflow:2.8.1-python3.11
+    image: ${AIRFLOW_IMAGE:-apache/airflow:2.8.1-python3.11}
     container_name: anidata-airflow-webserver
     command: webserver
     environment:
@@ -185,7 +185,7 @@ services:
   # AIRFLOW - Scheduler
   # ==========================================
   airflow-scheduler:
-    image: apache/airflow:2.8.1-python3.11
+    image: ${AIRFLOW_IMAGE:-apache/airflow:2.8.1-python3.11}
     container_name: anidata-airflow-scheduler
     command: scheduler
     environment:

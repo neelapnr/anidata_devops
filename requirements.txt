@@ -1,0 +1,13 @@
+# Dépendances Python supplémentaires installées dans l'image Airflow custom.
+# Ces packages remplacent ceux qui étaient dans _PIP_ADDITIONAL_REQUIREMENTS
+# du docker-compose.yml de la semaine 1.
+
+# Pour les DAGs ETL (lecture/transformation/indexation)
+pandas==2.2.2
+elasticsearch==8.13.0
+apache-airflow-providers-elasticsearch==5.4.0
+
+# Pour le scraper (déjà déclarés dans anidata-scraper/requirements.txt
+# mais on les redéclare ici pour que l'image soit autonome)
+requests==2.32.3
+beautifulsoup4==4.12.3
